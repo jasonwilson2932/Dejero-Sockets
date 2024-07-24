@@ -1,5 +1,6 @@
 package main.java.server;
 
+import main.java.tlv.TLVOutputWriter;
 import main.java.tlv.TLVParser;
 import main.java.tlv.TLVResponse;
 
@@ -11,21 +12,26 @@ import java.util.logging.Logger;
 public class Client implements Runnable {
 
     private Socket clientSocket;
+    private String port;
+    private int execCounter;
 
     private DataOutputStream out; // write for the client
     private BufferedReader in; // read from the client
 
-    public Client(Socket clientSocket) {
+    public Client(final Socket clientSocket, final String ip, final int port, final int execCounter) {
         this.clientSocket = clientSocket;
+        this.port = String.valueOf(port);
+        this.execCounter = execCounter;
     }
 
     @Override
     public void run() {
         // Do client process
         final String inMessage = inFromClient();
-        final List<TLVResponse> tlvResponses = TLVParser.parseTLV(inMessage, "127.0.0.1", "8080");
+        final List<TLVResponse> tlvResponses = TLVParser.parseTLV(inMessage, "127.0.0.1", port);
         final String formattedResponse = TLVParser.formatResponse(tlvResponses);
         outToClient(formattedResponse);
+        TLVOutputWriter.writeFileOut(formattedResponse, execCounter);
         closeConnection();
     }
 

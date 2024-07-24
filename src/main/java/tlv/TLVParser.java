@@ -5,13 +5,29 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+/**
+ * Handles the parsing and formatting of response data
+ */
 public class TLVParser {
 
+    // Splits the incoming string on the 3 expected TLV blob keys (E110, DA7A, 0B1E)
+    final static String INPUT_REGEX_SPLIT = TypeEnum.HELLO.getHexKey() + "|" + TypeEnum.DATA.getHexKey() + "|" + TypeEnum.GOODBYE.getHexKey();
+
     public static List<TLVResponse> parseTLV(final String input, final String ip, final String port) {
-        String[] arr = input.split("E110|DA7A|0B1E");
-        String e110 = TypeEnum.HELLO.getHexKey() + arr[1];
-        String da7a = TypeEnum.DATA.getHexKey() + arr[2];
-        String b1e = TypeEnum.GOODBYE.getHexKey() + arr[3];
+        if (!TLVDataValidator.validate(input)) {
+            // Throws error if in-blob does not contain at least 1 entry of Hello, Data & Goodbye Hex values
+            final String invalidBlobErr = "Invalid TLV Blob. Must contain at least one entry of " + TypeEnum.HELLO.getTextValue()
+                    + TypeEnum.DATA.getTextValue() + TypeEnum.GOODBYE.getTextValue();
+            throw new TLVApplicationException(invalidBlobErr);
+        }
+        List<String> blobs = Arrays.asList(input.split(INPUT_REGEX_SPLIT));
+        int index = 0;
+        if ("".equals(blobs.get(0))) {
+            index++;
+        }
+        String e110 = TypeEnum.HELLO.getHexKey() + blobs.get(index++);
+        String da7a = TypeEnum.DATA.getHexKey() + blobs.get(index++);
+        String b1e = TypeEnum.GOODBYE.getHexKey() + blobs.get(index);
 
         return Arrays.asList(buildTLVResponse(TypeEnum.HELLO, e110, ip, port),
                 buildTLVResponse(TypeEnum.DATA, da7a, ip, port),
