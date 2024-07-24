@@ -1,3 +1,5 @@
+package main.java.server;
+
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -17,13 +19,13 @@ public class Server {
     public void start() {
 
         this.run = true;
-        Logger.getLogger(getClass().getName()).info("Server is listening on port: " + port);
+        Logger.getLogger(getClass().getName()).info("main.java.server.Server is listening on port: " + port);
 
         try {
             while (run) {
                 Socket cs = sSocket.accept();
                 Logger.getLogger(getClass().getName())
-                        .info("New Client Connected! " + cs.getPort());
+                        .info("New main.java.server.Client Connected! " + cs.getPort());
                 new Thread(new Client(cs)).start(); // Put to a new thread.
             }
         } catch (IOException e) {

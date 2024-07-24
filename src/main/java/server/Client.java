@@ -1,5 +1,11 @@
+package main.java.server;
+
+import main.java.tlv.TLVParser;
+import main.java.tlv.TLVResponse;
+
 import java.io.*;
 import java.net.Socket;
+import java.util.List;
 import java.util.logging.Logger;
 
 public class Client implements Runnable {
@@ -16,26 +22,27 @@ public class Client implements Runnable {
     @Override
     public void run() {
         // Do client process
-        outToClient(inFromClient().toUpperCase());
+        final String inMessage = inFromClient();
+        final List<TLVResponse> tlvResponses = TLVParser.parseTLV(inMessage, "127.0.0.1", "8080");
+        final String formattedResponse = TLVParser.formatResponse(tlvResponses);
+        outToClient(formattedResponse);
         closeConnection();
     }
 
+    /**
+     * Handles processing data from value to String
+     */
     private String inFromClient() {
 
         String messageFromClient = "";
-
-        /*
-         *  Do not use try with resources because once -
-         *  - it exits the block it will close your client socket too.
-         */
         try {
             in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
             messageFromClient = in.readLine();
         } catch (IOException e) {
-            Logger.getLogger(getClass().getName()).severe("InFromClientErr - " + e.getMessage());
+            Logger.getLogger(getClass().getName()).severe("In error from client: " + e.getMessage());
         }
 
-        return messageFromClient.trim().equals("") ? "No Inputs given!" : messageFromClient;
+        return messageFromClient.trim().equals("") ? "Empty string from client" : messageFromClient;
     }
 
     private void outToClient(String message) {
@@ -43,7 +50,7 @@ public class Client implements Runnable {
             out = new DataOutputStream(clientSocket.getOutputStream());
             out.writeBytes(message);
         } catch (IOException e) {
-            Logger.getLogger(getClass().getName()).severe("OutToClientErr - " + e.getMessage());
+            Logger.getLogger(getClass().getName()).severe("Error writing to client: " + e.getMessage());
         }
     }
 
